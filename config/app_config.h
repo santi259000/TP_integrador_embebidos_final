@@ -1,0 +1,18 @@
+#ifndef APP_CONFIG_H
+#define APP_CONFIG_H
+
+#define UART_BAUDRATE                 115200U
+
+#define UART_RX_ISR_QUEUE_LENGTH      64U
+#define PARSER_INPUT_QUEUE_LENGTH     64U
+#define APP_MESSAGE_QUEUE_LENGTH      8U
+#define UART_TX_QUEUE_LENGTH          8U
+#define ACTUATOR_QUEUE_LENGTH         8U
+
+#define TELEMETRY_PERIOD_MS           1000U
+#define STATUS_PERIOD_MS              5000U
+
+#define PROTOCOL_MAX_PAYLOAD_LENGTH   48U
+#define PROTOCOL_MAX_FRAME_LENGTH     64U
+
+#endif

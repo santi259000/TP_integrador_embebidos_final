@@ -1,6 +1,9 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "FreeRTOS.h"
+#include "task.h"
+
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/timer.h>
@@ -17,17 +20,15 @@
 #define SYS_FREQ_HZ        72000000U
 
 /*
- * LED externo con PWM:
- * PA1 corresponde al canal TIM2_CH2.
- * Se utiliza para variar el brillo del LED según el valor leído por ADC.
+ * Variante 1:
+ * LED verde en PA1 -> estado normal.
+ * LED rojo en PA2  -> emergencia.
  */
-#define LED_PWM_PORT       GPIOA
-#define LED_PWM_PIN        GPIO1
-#define LED_PWM_TIMER      TIM2
-#define LED_PWM_OC         TIM_OC2
-#define LED_PWM_PERIOD     999U
-#define LED_PWM_FREQ_HZ    1000U
-#define LED_PWM_PRESCALER  ((SYS_FREQ_HZ / (LED_PWM_FREQ_HZ * (LED_PWM_PERIOD + 1U))) - 1U)
+#define GREEN_LED_PORT     GPIOA
+#define GREEN_LED_PIN      GPIO1
+
+#define RED_LED_PORT       GPIOA
+#define RED_LED_PIN        GPIO2
 
 /*
  * Buzzer pasivo con PWM:
@@ -42,59 +43,47 @@
 #define BUZZER_FREQ_HZ     2000U
 #define BUZZER_PRESCALER   ((SYS_FREQ_HZ / (BUZZER_FREQ_HZ * (BUZZER_PERIOD + 1U))) - 1U)
 
-#define ADC_MAX_VALUE      4095U
-
 /*
- * Umbral a partir del cual se activa el buzzer.
- * Se eligió 3000 como valor de prueba para que el buzzer suene
- * cuando el potenciómetro se encuentre en una zona alta.
+ * Destello LED rojo:
+ * La consigna pide 4 Hz con 50 % de duty.
+ *
+ * f = 4 Hz -> T = 250 ms
+ * 50 % duty -> 125 ms encendido y 125 ms apagado.
  */
-#define BUZZER_THRESHOLD   3000U
+#define RED_BLINK_HALF_PERIOD_MS 125U
 
-static void led_pwm_setup(void)
+static bool g_emergency_active = false;
+static bool g_red_led_state = false;
+static TickType_t g_last_blink_tick = 0U;
+
+static void leds_setup(void)
 {
     /*
-     * Se habilitan los clocks del puerto GPIOA y del timer TIM2.
+     * Se habilita GPIOA para los LED externos.
      */
     rcc_periph_clock_enable(RCC_GPIOA);
-    rcc_periph_clock_enable(RCC_TIM2);
 
     /*
-     * PA1 se configura como salida alternativa push-pull.
-     * Esta configuración permite que el pin sea manejado por el periférico TIM2
-     * en lugar de funcionar como una salida GPIO común.
+     * PA1 y PA2 como salidas digitales push-pull.
+     * PA1: LED verde.
+     * PA2: LED rojo.
      */
-    gpio_set_mode(LED_PWM_PORT,
+    gpio_set_mode(GREEN_LED_PORT,
                   GPIO_MODE_OUTPUT_2_MHZ,
-                  GPIO_CNF_OUTPUT_ALTFN_PUSHPULL,
-                  LED_PWM_PIN);
+                  GPIO_CNF_OUTPUT_PUSHPULL,
+                  GREEN_LED_PIN);
 
-    timer_disable_counter(LED_PWM_TIMER);
-
-    /*
-     * Configuración de frecuencia PWM para el LED:
-     *
-     * f_PWM = SYS_FREQ / ((PSC + 1) * (ARR + 1))
-     *
-     * Con SYS_FREQ = 72 MHz, ARR = 999 y f_PWM = 1 kHz:
-     * PSC = 71.
-     */
-    timer_set_prescaler(LED_PWM_TIMER, LED_PWM_PRESCALER);
-    timer_set_period(LED_PWM_TIMER, LED_PWM_PERIOD);
+    gpio_set_mode(RED_LED_PORT,
+                  GPIO_MODE_OUTPUT_2_MHZ,
+                  GPIO_CNF_OUTPUT_PUSHPULL,
+                  RED_LED_PIN);
 
     /*
-     * Se configura el canal TIM2_CH2 en modo PWM1.
-     * El valor de comparación define el duty cycle.
+     * Estado inicial seguro:
+     * verde encendido, rojo apagado.
      */
-    timer_set_oc_mode(LED_PWM_TIMER, LED_PWM_OC, TIM_OCM_PWM1);
-    timer_enable_oc_output(LED_PWM_TIMER, LED_PWM_OC);
-
-    /*
-     * Duty inicial en 0: LED apagado al iniciar.
-     */
-    timer_set_oc_value(LED_PWM_TIMER, LED_PWM_OC, 0);
-
-    timer_enable_counter(LED_PWM_TIMER);
+    gpio_set(GREEN_LED_PORT, GREEN_LED_PIN);
+    gpio_clear(RED_LED_PORT, RED_LED_PIN);
 }
 
 static void buzzer_pwm_setup(void)
@@ -123,9 +112,6 @@ static void buzzer_pwm_setup(void)
      *
      * Con SYS_FREQ = 72 MHz, ARR = 999 y f_PWM = 2 kHz:
      * PSC = 35.
-     *
-     * 2 kHz se encuentra dentro de un rango audible adecuado
-     * para probar un buzzer pasivo.
      */
     timer_set_prescaler(BUZZER_TIMER, BUZZER_PRESCALER);
     timer_set_period(BUZZER_TIMER, BUZZER_PERIOD);
@@ -157,55 +143,115 @@ void actuators_init(void)
                   GPIO_CNF_OUTPUT_PUSHPULL,
                   STATUS_LED_PIN);
 
+    /*
+     * En la Blue Pill, PC13 suele ser activo en bajo.
+     * Se deja apagado inicialmente.
+     */
     gpio_set(STATUS_LED_PORT, STATUS_LED_PIN);
 
     /*
-     * Inicialización de las salidas PWM usadas en la Etapa 2.
+     * Inicialización de salidas de Variante 1:
+     * - LED verde PA1.
+     * - LED rojo PA2.
+     * - Buzzer pasivo PB0 con PWM.
      */
-    led_pwm_setup();
+    leds_setup();
     buzzer_pwm_setup();
+
+    actuators_set_normal();
 }
 
+/*
+ * Función conservada de la Etapa 2.
+ * En la Variante 1, el ADC se usa como health check y se reporta por UART.
+ * Por eso esta función ya no modifica directamente LED/buzzer.
+ */
 void actuators_update_from_adc(uint16_t adc_value)
 {
-    uint32_t led_duty;
+    (void) adc_value;
+}
+
+void actuators_set_normal(void)
+{
+    g_emergency_active = false;
+    g_red_led_state = false;
 
     /*
-     * Protección por si el valor recibido supera el rango esperado del ADC.
+     * Estado normal:
+     * - LED verde encendido.
+     * - LED rojo apagado.
+     * - Buzzer apagado.
      */
-    if (adc_value > ADC_MAX_VALUE) {
-        adc_value = ADC_MAX_VALUE;
+    gpio_set(GREEN_LED_PORT, GREEN_LED_PIN);
+    gpio_clear(RED_LED_PORT, RED_LED_PIN);
+    actuators_buzzer_off();
+}
+
+void actuators_set_emergency(void)
+{
+    g_emergency_active = true;
+    g_red_led_state = true;
+    g_last_blink_tick = xTaskGetTickCount();
+
+    /*
+     * Estado emergencia:
+     * - LED verde apagado.
+     * - LED rojo comienza encendido y luego destella.
+     * - Buzzer encendido.
+     */
+    gpio_clear(GREEN_LED_PORT, GREEN_LED_PIN);
+    gpio_set(RED_LED_PORT, RED_LED_PIN);
+    actuators_buzzer_on();
+}
+
+void actuators_update_emergency_blink(void)
+{
+    TickType_t now;
+
+    if (!g_emergency_active) {
+        return;
     }
 
-    /*
-     * Mapeo del valor ADC al duty cycle del PWM del LED:
-     *
-     * ADC = 0    -> duty = 0
-     * ADC = 2048 -> duty aproximado 50 %
-     * ADC = 4095 -> duty máximo
-     */
-    led_duty = ((uint32_t) adc_value * LED_PWM_PERIOD) / ADC_MAX_VALUE;
-    timer_set_oc_value(LED_PWM_TIMER, LED_PWM_OC, led_duty);
+    now = xTaskGetTickCount();
 
     /*
-     * Control del buzzer pasivo.
-     * Si el ADC supera el umbral, se aplica un duty de 50 %
-     * para generar una señal cuadrada audible.
-     * Si no supera el umbral, el duty se pone en 0 y el buzzer se apaga.
+     * Destello de 4 Hz con 50 % de duty:
+     * cambia de estado cada 125 ms.
      */
-    if (adc_value >= BUZZER_THRESHOLD) {
-        timer_set_oc_value(BUZZER_TIMER, BUZZER_OC, BUZZER_PERIOD / 2U);
-    } else {
-        timer_set_oc_value(BUZZER_TIMER, BUZZER_OC, 0);
+    if ((now - g_last_blink_tick) >= pdMS_TO_TICKS(RED_BLINK_HALF_PERIOD_MS)) {
+        g_last_blink_tick = now;
+
+        g_red_led_state = !g_red_led_state;
+
+        if (g_red_led_state) {
+            gpio_set(RED_LED_PORT, RED_LED_PIN);
+        } else {
+            gpio_clear(RED_LED_PORT, RED_LED_PIN);
+        }
     }
+}
+
+void actuators_buzzer_on(void)
+{
+    /*
+     * Duty 50 % para generar tono continuo en el buzzer pasivo.
+     */
+    timer_set_oc_value(BUZZER_TIMER, BUZZER_OC, BUZZER_PERIOD / 2U);
+}
+
+void actuators_buzzer_off(void)
+{
+    /*
+     * Duty 0: buzzer apagado.
+     */
+    timer_set_oc_value(BUZZER_TIMER, BUZZER_OC, 0);
 }
 
 void actuators_apply_command(const actuator_command_t *command)
 {
     /*
      * Esta función se conserva para compatibilidad con la lógica previa del TP5.
-     * En la Etapa 2 el control principal de actuadores se realiza desde
-     * actuators_update_from_adc().
+     * Permite controlar el LED interno PC13 con comandos led=on/off/toggle.
      */
     if (command == NULL) {
         return;

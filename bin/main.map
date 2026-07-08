@@ -874,7 +874,7 @@ Discarded input sections
  .debug_macro   0x00000000       0xe8 third_party/libopencm3/lib/libopencm3_stm32f1.a(assert.o)
  .debug_macro   0x00000000       0x16 third_party/libopencm3/lib/libopencm3_stm32f1.a(assert.o)
  .debug_line    0x00000000       0xdf third_party/libopencm3/lib/libopencm3_stm32f1.a(assert.o)
- .debug_str     0x00000000     0x3db3 third_party/libopencm3/lib/libopencm3_stm32f1.a(assert.o)
+ .debug_str     0x00000000     0x3d95 third_party/libopencm3/lib/libopencm3_stm32f1.a(assert.o)
  .comment       0x00000000       0x27 third_party/libopencm3/lib/libopencm3_stm32f1.a(assert.o)
  .debug_frame   0x00000000       0x38 third_party/libopencm3/lib/libopencm3_stm32f1.a(assert.o)
  .ARM.attributes
@@ -2103,56 +2103,56 @@ LOAD linker stubs
  .debug_line    0x0000b711      0x27b /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-reent.o)
  .debug_line    0x0000b98c       0x76 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(sbrk.o)
 
-.debug_str      0x00000000    0x19fdd
- .debug_str     0x00000000    0x19fdd bin/main.o
-                                0x321 (size before relaxing)
- .debug_str     0x00019fdd      0x3b8 bin/platform/system_init.o
- .debug_str     0x00019fdd      0x808 bin/app/tasks.o
- .debug_str     0x00019fdd      0x6eb bin/drivers/uart_comm.o
- .debug_str     0x00019fdd      0x36b bin/protocol/protocol.o
- .debug_str     0x00019fdd      0x505 bin/protocol/parser.o
- .debug_str     0x00019fdd      0x343 bin/app/app.o
- .debug_str     0x00019fdd      0x66f bin/app/sensors.o
- .debug_str     0x00019fdd      0x5f5 bin/app/actuators.o
- .debug_str     0x00019fdd      0x6b1 bin/app/button.o
- .debug_str     0x00019fdd      0x2bd bin/freertos/list.o
- .debug_str     0x00019fdd      0xa89 bin/freertos/queue.o
- .debug_str     0x00019fdd     0x1040 bin/freertos/tasks.o
- .debug_str     0x00019fdd      0x438 bin/freertos/portable/GCC/ARM_CM3/port.o
- .debug_str     0x00019fdd      0x4f6 bin/freertos/heap_4.o
- .debug_str     0x00019fdd     0x70f7 third_party/libopencm3/lib/libopencm3_stm32f1.a(adc.o)
- .debug_str     0x00019fdd     0x743d third_party/libopencm3/lib/libopencm3_stm32f1.a(adc_common_v1.o)
- .debug_str     0x00019fdd     0x8724 third_party/libopencm3/lib/libopencm3_stm32f1.a(exti_common_all.o)
- .debug_str     0x00019fdd     0x82f0 third_party/libopencm3/lib/libopencm3_stm32f1.a(gpio.o)
- .debug_str     0x00019fdd     0x82ee third_party/libopencm3/lib/libopencm3_stm32f1.a(gpio_common_all.o)
- .debug_str     0x00019fdd     0x7f50 third_party/libopencm3/lib/libopencm3_stm32f1.a(rcc.o)
- .debug_str     0x00019fdd     0x7653 third_party/libopencm3/lib/libopencm3_stm32f1.a(rcc_common_all.o)
- .debug_str     0x00019fdd     0xbbfa third_party/libopencm3/lib/libopencm3_stm32f1.a(timer_common_all.o)
- .debug_str     0x00019fdd     0x82a6 third_party/libopencm3/lib/libopencm3_stm32f1.a(usart_common_all.o)
- .debug_str     0x00019fdd     0x8012 third_party/libopencm3/lib/libopencm3_stm32f1.a(usart_common_f124.o)
- .debug_str     0x00019fdd     0x633f third_party/libopencm3/lib/libopencm3_stm32f1.a(vector.o)
- .debug_str     0x00019fdd     0x590c third_party/libopencm3/lib/libopencm3_stm32f1.a(nvic.o)
- .debug_str     0x00019fdd     0x523e third_party/libopencm3/lib/libopencm3_stm32f1.a(flash_common_all.o)
- .debug_str     0x00019fdd      0x19b /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-strlen-stub.o)
- .debug_str     0x00019fdd      0x1a5 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memset.o)
- .debug_str     0x00019fdd       0xa8 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memcpy.o)
- .debug_str     0x00019fdd      0x1bb /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-strncpy.o)
- .debug_str     0x00019fdd      0x193 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-strncmp.o)
- .debug_str     0x00019fdd       0xa8 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-strcmp.o)
- .debug_str     0x00019fdd      0x502 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-snprintf.o)
- .debug_str     0x00019fdd      0x4b4 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-impure.o)
- .debug_str     0x00019fdd      0x7fd /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-svfprintf.o)
- .debug_str     0x00019fdd      0x595 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-mallocr.o)
- .debug_str     0x00019fdd      0x534 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-freer.o)
- .debug_str     0x00019fdd      0x1c4 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memmove.o)
- .debug_str     0x00019fdd      0x52a /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-reallocr.o)
- .debug_str     0x00019fdd      0x793 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-vfprintf_i.o)
- .debug_str     0x00019fdd      0x4d2 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-mlock.o)
- .debug_str     0x00019fdd      0x1b5 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memchr-stub.o)
- .debug_str     0x00019fdd      0x4bd /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-sbrkr.o)
- .debug_str     0x00019fdd      0x4fd /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-msizer.o)
- .debug_str     0x00019fdd      0x4d3 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-reent.o)
- .debug_str     0x00019fdd      0x115 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(sbrk.o)
+.debug_str      0x00000000    0x19fa9
+ .debug_str     0x00000000    0x19fa9 bin/main.o
+                                0x30b (size before relaxing)
+ .debug_str     0x00019fa9      0x3a2 bin/platform/system_init.o
+ .debug_str     0x00019fa9      0x7f2 bin/app/tasks.o
+ .debug_str     0x00019fa9      0x6d5 bin/drivers/uart_comm.o
+ .debug_str     0x00019fa9      0x355 bin/protocol/protocol.o
+ .debug_str     0x00019fa9      0x4ef bin/protocol/parser.o
+ .debug_str     0x00019fa9      0x32d bin/app/app.o
+ .debug_str     0x00019fa9      0x659 bin/app/sensors.o
+ .debug_str     0x00019fa9      0x5df bin/app/actuators.o
+ .debug_str     0x00019fa9      0x69b bin/app/button.o
+ .debug_str     0x00019fa9      0x2a7 bin/freertos/list.o
+ .debug_str     0x00019fa9      0xa73 bin/freertos/queue.o
+ .debug_str     0x00019fa9     0x102a bin/freertos/tasks.o
+ .debug_str     0x00019fa9      0x422 bin/freertos/portable/GCC/ARM_CM3/port.o
+ .debug_str     0x00019fa9      0x4e0 bin/freertos/heap_4.o
+ .debug_str     0x00019fa9     0x70d9 third_party/libopencm3/lib/libopencm3_stm32f1.a(adc.o)
+ .debug_str     0x00019fa9     0x741f third_party/libopencm3/lib/libopencm3_stm32f1.a(adc_common_v1.o)
+ .debug_str     0x00019fa9     0x8706 third_party/libopencm3/lib/libopencm3_stm32f1.a(exti_common_all.o)
+ .debug_str     0x00019fa9     0x82d2 third_party/libopencm3/lib/libopencm3_stm32f1.a(gpio.o)
+ .debug_str     0x00019fa9     0x82d0 third_party/libopencm3/lib/libopencm3_stm32f1.a(gpio_common_all.o)
+ .debug_str     0x00019fa9     0x7f32 third_party/libopencm3/lib/libopencm3_stm32f1.a(rcc.o)
+ .debug_str     0x00019fa9     0x7635 third_party/libopencm3/lib/libopencm3_stm32f1.a(rcc_common_all.o)
+ .debug_str     0x00019fa9     0xbbdc third_party/libopencm3/lib/libopencm3_stm32f1.a(timer_common_all.o)
+ .debug_str     0x00019fa9     0x8288 third_party/libopencm3/lib/libopencm3_stm32f1.a(usart_common_all.o)
+ .debug_str     0x00019fa9     0x7ff4 third_party/libopencm3/lib/libopencm3_stm32f1.a(usart_common_f124.o)
+ .debug_str     0x00019fa9     0x6321 third_party/libopencm3/lib/libopencm3_stm32f1.a(vector.o)
+ .debug_str     0x00019fa9     0x58ee third_party/libopencm3/lib/libopencm3_stm32f1.a(nvic.o)
+ .debug_str     0x00019fa9     0x5220 third_party/libopencm3/lib/libopencm3_stm32f1.a(flash_common_all.o)
+ .debug_str     0x00019fa9      0x19b /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-strlen-stub.o)
+ .debug_str     0x00019fa9      0x1a5 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memset.o)
+ .debug_str     0x00019fa9       0xa8 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memcpy.o)
+ .debug_str     0x00019fa9      0x1bb /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-strncpy.o)
+ .debug_str     0x00019fa9      0x193 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-strncmp.o)
+ .debug_str     0x00019fa9       0xa8 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-strcmp.o)
+ .debug_str     0x00019fa9      0x502 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-snprintf.o)
+ .debug_str     0x00019fa9      0x4b4 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-impure.o)
+ .debug_str     0x00019fa9      0x7fd /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-svfprintf.o)
+ .debug_str     0x00019fa9      0x595 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-mallocr.o)
+ .debug_str     0x00019fa9      0x534 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-freer.o)
+ .debug_str     0x00019fa9      0x1c4 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memmove.o)
+ .debug_str     0x00019fa9      0x52a /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-reallocr.o)
+ .debug_str     0x00019fa9      0x793 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-vfprintf_i.o)
+ .debug_str     0x00019fa9      0x4d2 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-mlock.o)
+ .debug_str     0x00019fa9      0x1b5 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memchr-stub.o)
+ .debug_str     0x00019fa9      0x4bd /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-sbrkr.o)
+ .debug_str     0x00019fa9      0x4fd /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-msizer.o)
+ .debug_str     0x00019fa9      0x4d3 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-reent.o)
+ .debug_str     0x00019fa9      0x115 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(sbrk.o)
 
 .comment        0x00000000       0x26
  .comment       0x00000000       0x26 bin/main.o

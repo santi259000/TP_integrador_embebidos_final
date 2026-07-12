@@ -16,11 +16,6 @@
 #include "../protocol/parser.h"
 #include "../protocol/protocol.h"
 
-#define ESTOP_RETRY_MS      500U
-#define DAT_PERIOD_MS       500U
-#define STS_PERIOD_MS       1000U
-#define VARIANT_TASK_MS     10U
-
 static QueueHandle_t g_uart_rx_isr_queue;
 static QueueHandle_t g_parser_input_queue;
 static QueueHandle_t g_uart_tx_queue;
@@ -30,21 +25,9 @@ static volatile uint32_t g_parser_byte_count = 0U;
 static volatile uint32_t g_parser_message_count = 0U;
 static volatile uint32_t g_parser_error_count = 0U;
 
-/*
- * Estado propio de la Variante 1.
- */
-static volatile bool g_emergency_active = false;
-static volatile bool g_estop_ack_received = false;
-static TickType_t g_last_estop_tx_tick = 0U;
-
-static void send_protocol_message(protocol_type_t type, const char *payload)
-{
-    protocol_message_t message;
-
-    if (protocol_message_set(&message, type, payload)) {
-        xQueueSend(g_uart_tx_queue, &message, portMAX_DELAY);
-    }
-}
+/* Banderas globales para la Variante 1 */
+volatile bool g_ack_estop_received = false;
+volatile bool g_emergency_active = false;
 
 static void task_uart_rx(void *args)
 {
@@ -83,100 +66,89 @@ static void task_parser(void *args)
             g_parser_message_count++;
 
             /*
-             * Variante 1:
-             * Si llega ACK:estop, se toma como confirmación de la parada
-             * y se deja de reenviar EVT:e_stop.
+             * Etapa 3: Variante 1 - Interceptar el ACK del Bridge
              */
-            if ((message.type == PROTOCOL_TYPE_ACK) &&
-                (strcmp(message.payload, "estop") == 0)) {
-                g_estop_ack_received = true;
-                continue;
+            if (message.type == PROTOCOL_TYPE_ACK && strncmp(message.payload, "estop", 5) == 0) {
+                g_ack_estop_received = true;
             }
 
             /*
-             * Para otras tramas válidas se mantiene la lógica de Etapa 1:
-             * responder ACK:ok.
+             * Etapa 1:
+             * Si el parser entregó una trama válida, la aplicación responde ACK:ok.
              */
             if (app_process_message(&message, &response)) {
                 xQueueSend(g_uart_tx_queue, &response, portMAX_DELAY);
             }
 
         } else if (result == PARSER_RESULT_ERROR) {
+            protocol_message_t error_message;
+
             g_parser_error_count++;
 
             /*
+             * Etapa 1:
              * Si el parser detecta una trama inválida, responde ERR:bounds.
              */
-            send_protocol_message(PROTOCOL_TYPE_ERR, "bounds");
+            if (protocol_message_set(&error_message, PROTOCOL_TYPE_ERR, "bounds")) {
+                xQueueSend(g_uart_tx_queue, &error_message, portMAX_DELAY);
+            }
         }
     }
 }
 
-/*
- * Tarea de la Variante 1:
- * - Lee eventos del botón.
- * - Cambia estado normal/emergencia.
- * - Reenvía EVT:e_stop cada 500 ms si no llegó ACK:estop.
- * - Actualiza el destello del LED rojo.
- */
-static void task_variant1(void *args)
+static void task_button(void *args)
 {
     bool pressed = false;
-    TickType_t now;
+    TickType_t last_send_time = 0;
+    protocol_message_t message;
+    actuator_command_t act_cmd;
+    
     (void) args;
 
-    actuators_set_normal();
-
     while (1) {
-        /*
-         * Actualiza el parpadeo del LED rojo si la emergencia está activa.
-         */
-        actuators_update_emergency_blink();
-
-        /*
-         * Procesa eventos del botón.
-         */
         if (button_get_event(&pressed)) {
             if (pressed) {
-                /*
-                 * Botón presionado: entra en emergencia.
-                 */
-                if (!g_emergency_active) {
-                    g_emergency_active = true;
-                    g_estop_ack_received = false;
-                    g_last_estop_tx_tick = xTaskGetTickCount();
+                g_emergency_active = true;
+                g_ack_estop_received = false; 
+                
+                /* 1. Activar Periféricos (LED Rojo parpadeando, Buzzer encendido) */
+                strncpy(act_cmd.target, "sys", sizeof(act_cmd.target));
+                strncpy(act_cmd.action, "em_on", sizeof(act_cmd.action));
+                xQueueSend(g_actuator_queue, &act_cmd, portMAX_DELAY);
 
-                    actuators_set_emergency();
-                    send_protocol_message(PROTOCOL_TYPE_EVT, "e_stop");
+                /* 2. Enviar el primer EVT:e_stop */
+                if (protocol_message_set(&message, PROTOCOL_TYPE_EVT, "e_stop")) {
+                    xQueueSend(g_uart_tx_queue, &message, portMAX_DELAY);
+                    last_send_time = xTaskGetTickCount();
                 }
             } else {
-                /*
-                 * Botón liberado/rearme: sale de emergencia.
-                 */
-                if (g_emergency_active) {
-                    g_emergency_active = false;
-                    g_estop_ack_received = false;
+                g_emergency_active = false;
+                
+                /* 1. Desactivar Periféricos (Volver a LED Verde fijo) */
+                strncpy(act_cmd.target, "sys", sizeof(act_cmd.target));
+                strncpy(act_cmd.action, "em_off", sizeof(act_cmd.action));
+                xQueueSend(g_actuator_queue, &act_cmd, portMAX_DELAY);
 
-                    actuators_set_normal();
-                    send_protocol_message(PROTOCOL_TYPE_EVT, "e_stop_rel");
+                /* 2. Enviar liberación */
+                if (protocol_message_set(&message, PROTOCOL_TYPE_EVT, "e_stop_rel")) {
+                    xQueueSend(g_uart_tx_queue, &message, portMAX_DELAY);
                 }
             }
         }
 
-        /*
-         * Si está en emergencia y todavía no llegó ACK:estop,
-         * reenvía EVT:e_stop cada 500 ms.
-         */
-        if (g_emergency_active && !g_estop_ack_received) {
-            now = xTaskGetTickCount();
-
-            if ((now - g_last_estop_tx_tick) >= pdMS_TO_TICKS(ESTOP_RETRY_MS)) {
-                g_last_estop_tx_tick = now;
-                send_protocol_message(PROTOCOL_TYPE_EVT, "e_stop");
+        /* Lógica de reenvío por Timeout (500 ms) - Requisito del TP */
+        if (g_emergency_active && !g_ack_estop_received) {
+            TickType_t current_time = xTaskGetTickCount();
+            if ((current_time - last_send_time) > pdMS_TO_TICKS(500)) {
+                /* Pasaron 500ms y no llegó el ACK, reenviar: */
+                if (protocol_message_set(&message, PROTOCOL_TYPE_EVT, "e_stop")) {
+                    xQueueSend(g_uart_tx_queue, &message, portMAX_DELAY);
+                    last_send_time = current_time; 
+                }
             }
         }
 
-        vTaskDelay(pdMS_TO_TICKS(VARIANT_TASK_MS));
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
@@ -195,50 +167,36 @@ uint32_t tasks_get_parser_error_count(void)
     return g_parser_error_count;
 }
 
-/*
- * Telemetría de Variante 1:
- * - DAT:adc=NNNN cada 500 ms.
- * - STS:OK cada 1 s.
- */
 static void task_telemetry(void *args)
 {
     TickType_t last_wake = xTaskGetTickCount();
-    TickType_t last_dat_tick = xTaskGetTickCount();
-    TickType_t last_sts_tick = xTaskGetTickCount();
-    TickType_t now;
     protocol_message_t message;
     uint32_t counter = 0U;
     (void) args;
 
     while (1) {
-        now = xTaskGetTickCount();
-
-        if ((now - last_dat_tick) >= pdMS_TO_TICKS(DAT_PERIOD_MS)) {
-            last_dat_tick = now;
-
-            if (app_build_telemetry_message(&message, counter)) {
-                /*
-                 * En la Variante 1 el ADC se usa como health check.
-                 * No modifica directamente la emergencia.
-                 */
-                xQueueSend(g_uart_tx_queue, &message, portMAX_DELAY);
-            }
-
-            counter++;
+        /*
+         * Tarea periódica de telemetría:
+         */
+        if (app_build_telemetry_message(&message, counter)) {
+            actuators_update_from_adc(sensors_get_last_adc());
+            xQueueSend(g_uart_tx_queue, &message, portMAX_DELAY);
         }
 
-        if ((now - last_sts_tick) >= pdMS_TO_TICKS(STS_PERIOD_MS)) {
-            last_sts_tick = now;
-
-            /*
-             * Heartbeat periódico pedido por la Variante 1.
-             */
-            if (protocol_message_set(&message, PROTOCOL_TYPE_STS, "OK")) {
-                xQueueSend(g_uart_tx_queue, &message, portMAX_DELAY);
-            }
+        /*
+         * Mensaje de estado del sistema.
+         */
+        if ((counter % (STATUS_PERIOD_MS / TELEMETRY_PERIOD_MS)) == 0U) {
+            app_build_status_message(&message);
+            xQueueSend(g_uart_tx_queue, &message, portMAX_DELAY);
         }
 
-        vTaskDelayUntil(&last_wake, pdMS_TO_TICKS(50U));
+        counter++;
+
+        /*
+         * Espera periódica sin bloquear el resto del sistema.
+         */
+        vTaskDelayUntil(&last_wake, pdMS_TO_TICKS(TELEMETRY_PERIOD_MS));
     }
 }
 
@@ -248,9 +206,15 @@ static void task_actuators(void *args)
     (void) args;
 
     while (1) {
-        if (xQueueReceive(g_actuator_queue, &command, portMAX_DELAY) == pdPASS) {
+        /* * Usamos un timeout de 50ms en lugar de portMAX_DELAY.
+         * Esto permite que la tarea se despierte periódicamente 
+         * para hacer parpadear el LED rojo si la emergencia está activa.
+         */
+        if (xQueueReceive(g_actuator_queue, &command, pdMS_TO_TICKS(50)) == pdPASS) {
             actuators_apply_command(&command);
         }
+        
+        actuators_update_emergency_blink();
     }
 }
 
@@ -286,20 +250,11 @@ void tasks_start(void)
 
     uart_comm_set_rx_queue(g_uart_rx_isr_queue);
     button_init();
-
+    
     xTaskCreate(task_uart_rx, "uart_rx", 160, NULL, 3, NULL);
     xTaskCreate(task_parser, "parser", 192, NULL, 3, NULL);
-
-    /*
-     * Tarea específica de la Variante 1.
-     */
-    xTaskCreate(task_variant1, "variant1", 192, NULL, 2, NULL);
-
-    /*
-     * DAT:adc=NNNN cada 500 ms y STS:OK cada 1 s.
-     */
+    xTaskCreate(task_button, "button", 160, NULL, 2, NULL);
     xTaskCreate(task_telemetry, "telemetry", 192, NULL, 2, NULL);
-
     xTaskCreate(task_actuators, "actuators", 160, NULL, 2, NULL);
     xTaskCreate(task_uart_tx, "uart_tx", 192, NULL, 2, NULL);
 

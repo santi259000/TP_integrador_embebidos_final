@@ -249,14 +249,24 @@ void actuators_buzzer_off(void)
 
 void actuators_apply_command(const actuator_command_t *command)
 {
-    /*
-     * Esta función se conserva para compatibilidad con la lógica previa del TP5.
-     * Permite controlar el LED interno PC13 con comandos led=on/off/toggle.
-     */
     if (command == NULL) {
         return;
     }
 
+    /* --- NUEVO: Comandos de Emergencia de la Variante 1 --- */
+    if (strcmp(command->target, "sys") == 0) {
+        if (strcmp(command->action, "em_on") == 0) {
+            actuators_set_emergency();
+        } else if (strcmp(command->action, "em_off") == 0) {
+            actuators_set_normal();
+        }
+        return; /* Salimos para no evaluar el resto */
+    }
+
+    /*
+     * Esta función se conserva para compatibilidad con la lógica previa del TP5.
+     * Permite controlar el LED interno PC13 con comandos led=on/off/toggle.
+     */
     if (strcmp(command->target, "led") != 0) {
         return;
     }

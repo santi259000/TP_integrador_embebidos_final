@@ -146,7 +146,7 @@ void exti15_10_isr(void)
     if (exti_get_flag_status(BUTTON_EXTI)) {
         exti_reset_request(BUTTON_EXTI);
 
-        g_raw_button_state = (gpio_get(BUTTON_PORT, BUTTON_PIN) != 0U);
+        g_raw_button_state = (gpio_get(BUTTON_PORT, BUTTON_PIN) == 0U);         // Revisa si el botón no está presionado
         g_raw_event_pending = true;
     }
 }

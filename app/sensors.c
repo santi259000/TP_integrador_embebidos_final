@@ -10,7 +10,7 @@
 #include "sensors.h"
 
 /*
- * Variable global interna para guardar la última lectura del ADC.
+ * Variable global interna para guardar la última lectura del ADC (potenciómetro).
  * Esto permite que otros módulos consulten el último valor medido
  * sin tener que iniciar una nueva conversión.
  */
@@ -120,11 +120,6 @@ bool sensors_build_telemetry_payload(char *buffer, size_t buffer_size, uint32_t 
     /*
      * Se arma el payload de telemetría.
      * Se usa ancho fijo de 4 dígitos para cumplir con el formato adc=NNNN.
-     *
-     * Ejemplos:
-     * adc=0000
-     * adc=2048
-     * adc=4095
      */
     written = snprintf(buffer, buffer_size, "adc=%04u", (unsigned int) adc_value);
 

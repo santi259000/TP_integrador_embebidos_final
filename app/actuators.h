@@ -6,8 +6,7 @@
 
 /*
  * Tipo de comando para controlar actuadores.
- * Se conserva del TP5 para compatibilidad con comandos como:
- * led=on, led=off y led=toggle.
+ * Se conserva del TP5 para mantener la compatibilidad con los comandos led=on, led=off y led=toggle.
  *
  * El archivo actuators.c usa los campos:
  * - target: indica qué actuador se quiere controlar, por ejemplo "led".

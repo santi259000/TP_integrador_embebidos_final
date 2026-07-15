@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 /*
- * Inicializa el pulsador de emergencia conectado a PB12.
+ * Se inicializa el pulsador de emergencia conectado al PB12.
  * Se configura como entrada digital con EXTI y antirrebote por tiempo.
  */
 void button_init(void);

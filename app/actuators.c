@@ -12,7 +12,7 @@
 
 /*
  * LED interno de la Blue Pill.
- * Se conserva como indicador auxiliar del sistema.
+ * Se conserva como un indicador auxiliar del sistema.
  */
 #define STATUS_LED_PORT GPIOC
 #define STATUS_LED_PIN  GPIO13
@@ -20,10 +20,13 @@
 #define SYS_FREQ_HZ        72000000U
 
 /*
- * Variante 1:
+ * Variante 1 (la que elegimos):
  * LED verde en PA1 -> estado normal.
  * LED rojo en PA2  -> emergencia.
  */
+
+ //Configuración de los pines y puertos para cada led 
+
 #define GREEN_LED_PORT     GPIOA
 #define GREEN_LED_PIN      GPIO1
 
@@ -163,7 +166,7 @@ void actuators_init(void)
 
 /*
  * Función conservada de la Etapa 2.
- * En la Variante 1, el ADC se usa como health check y se reporta por UART.
+ * En la Variante 1, el ADC se usa como health check (analiza el estado si sigue funcionando todo como corresponde) y se reporta por UART.
  * Por eso esta función ya no modifica directamente LED/buzzer.
  */
 void actuators_update_from_adc(uint16_t adc_value)
@@ -234,7 +237,7 @@ void actuators_update_emergency_blink(void)
 void actuators_buzzer_on(void)
 {
     /*
-     * Duty 50 % para generar tono continuo en el buzzer pasivo.
+     * Duty 50 % para generar una especie de tono continuo en el buzzer pasivo.
      */
     timer_set_oc_value(BUZZER_TIMER, BUZZER_OC, BUZZER_PERIOD / 2U);
 }
@@ -253,14 +256,14 @@ void actuators_apply_command(const actuator_command_t *command)
         return;
     }
 
-    /* --- NUEVO: Comandos de Emergencia de la Variante 1 --- */
+    /* --- Comandos de Emergencia de la Variante 1 --- */
     if (strcmp(command->target, "sys") == 0) {
         if (strcmp(command->action, "em_on") == 0) {
             actuators_set_emergency();
         } else if (strcmp(command->action, "em_off") == 0) {
             actuators_set_normal();
         }
-        return; /* Salimos para no evaluar el resto */
+        return; 
     }
 
     /*

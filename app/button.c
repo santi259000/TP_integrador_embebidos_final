@@ -38,7 +38,7 @@ void button_init(void)
      * Botón suelto   -> PB12 = 0
      * Botón apretado -> PB12 = 1
      *
-     * Aunque usamos pull-down interno, mantené también la resistencia
+     * Aunque usamos pull-down interno, se mantiene también la resistencia
      * externa de 10k a GND como pide la consigna.
      */
     gpio_set_mode(BUTTON_PORT,
